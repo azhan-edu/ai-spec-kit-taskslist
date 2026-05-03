@@ -1,0 +1,35 @@
+{
+  "name": "ai-spec-kit",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "jest",
+    "test:coverage": "jest --coverage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/azhan-edu/ai-spec-kit-taskslist.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/azhan-edu/ai-spec-kit-taskslist/issues"
+  },
+  "homepage": "https://github.com/azhan-edu/ai-spec-kit-taskslist#readme",
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.6.0",
+    "jest": "^30.3.0",
+    "ts-jest": "^29.4.9",
+    "typescript": "^5.9.3"
+  }
+}

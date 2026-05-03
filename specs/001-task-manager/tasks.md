@@ -22,11 +22,11 @@ Single project layout per plan.md: `src/` and `tests/` at repository root.
 
 **Purpose**: Project initialization, tooling, and FSD directory structure
 
-- [ ] T001 Create FSD directory structure: `src/shared/types/`, `src/shared/lib/`, `src/entities/task/`, `src/features/add-task/`, `src/features/list-tasks/`, `src/features/complete-task/`, `tests/unit/shared/`, `tests/unit/entities/`, `tests/unit/features/`, `tests/integration/`
-- [ ] T002 Initialize `package.json` with `npm init -y`; install devDependencies: `typescript@5`, `@types/node`, `jest`, `@types/jest`, `ts-jest`
-- [ ] T003 [P] Create `tsconfig.json` — strict mode, target ES2020, module commonjs, outDir `./dist`, rootDir `./src`, resolveJsonModule true, sourceMap true
-- [ ] T004 [P] Create `jest.config.js` — preset ts-jest, testEnvironment node, roots `['<rootDir>/tests', '<rootDir>/src']`, testMatch `['**/*.test.ts']`, coverageThreshold 70% branches/functions/lines/statements
-- [ ] T005 Add `build`, `test`, `test:coverage`, `start` scripts to `package.json`
+- [x] T001 Create FSD directory structure: `src/shared/types/`, `src/shared/lib/`, `src/entities/task/`, `src/features/add-task/`, `src/features/list-tasks/`, `src/features/complete-task/`, `tests/unit/shared/`, `tests/unit/entities/`, `tests/unit/features/`, `tests/integration/`
+- [x] T002 Initialize `package.json` with `npm init -y`; install devDependencies: `typescript@5`, `@types/node`, `jest`, `@types/jest`, `ts-jest`
+- [x] T003 [P] Create `tsconfig.json` — strict mode, target ES2020, module commonjs, outDir `./dist`, rootDir `./src`, resolveJsonModule true, sourceMap true
+- [x] T004 [P] Create `jest.config.js` — preset ts-jest, testEnvironment node, roots `['<rootDir>/tests', '<rootDir>/src']`, testMatch `['**/*.test.ts']`, coverageThreshold 70% branches/functions/lines/statements
+- [x] T005 Add `build`, `test`, `test:coverage`, `start` scripts to `package.json`
 
 ---
 
@@ -36,11 +36,11 @@ Single project layout per plan.md: `src/` and `tests/` at repository root.
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T006 [P] Define `Task`, `TaskStatus` (`'pending' | 'done'`), and `TasksFile` (`{ version: string; tasks: Task[] }`) types in `src/shared/types/task.ts`
-- [ ] T007 Write failing unit tests for storage utility (readTasks returns `[]` when file missing, returns tasks array when file exists, writeTasks creates/updates file) in `tests/unit/shared/storage.test.ts`
-- [ ] T008 Implement `readTasks(filePath: string): Task[]` and `writeTasks(filePath: string, tasks: Task[]): void` in `src/shared/lib/storage.ts` — handle missing file (return `[]`), handle corrupt JSON (return `[]`), use synchronous fs API; run T007 until green
-- [ ] T009 Write failing unit tests for `TaskStore` (addTask creates pending task with sequential ID, getTasks returns all tasks ordered by id, completeTask changes status to done, completeTask throws on unknown id, getTaskById returns task or undefined) in `tests/unit/entities/task.test.ts`
-- [ ] T010 Implement `TaskStore` class with `addTask(title)`, `getTasks()`, `completeTask(id)`, `getTaskById(id)`, and `nextId()` (max id + 1, or 1 if empty) in `src/entities/task/model.ts`; re-export from `src/entities/task/index.ts`; run T009 until green
+- [x] T006 [P] Define `Task`, `TaskStatus` (`'pending' | 'done'`), and `TasksFile` (`{ version: string; tasks: Task[] }`) types in `src/shared/types/task.ts`
+- [x] T007 Write failing unit tests for storage utility (readTasks returns `[]` when file missing, returns tasks array when file exists, writeTasks creates/updates file) in `tests/unit/shared/storage.test.ts`
+- [x] T008 Implement `readTasks(filePath: string): Task[]` and `writeTasks(filePath: string, tasks: Task[]): void` in `src/shared/lib/storage.ts` — handle missing file (return `[]`), handle corrupt JSON (return `[]`), use synchronous fs API; run T007 until green
+- [x] T009 Write failing unit tests for `TaskStore` (addTask creates pending task with sequential ID, getTasks returns all tasks ordered by id, completeTask changes status to done, completeTask throws on unknown id, getTaskById returns task or undefined) in `tests/unit/entities/task.test.ts`
+- [x] T010 Implement `TaskStore` class with `addTask(title)`, `getTasks()`, `completeTask(id)`, `getTaskById(id)`, and `nextId()` (max id + 1, or 1 if empty) in `src/entities/task/model.ts`; re-export from `src/entities/task/index.ts`; run T009 until green
 
 **Checkpoint**: Foundation ready — all user stories can now be implemented
 
@@ -54,12 +54,12 @@ Single project layout per plan.md: `src/` and `tests/` at repository root.
 
 ### Tests
 
-- [ ] T011 [US1] Write failing unit tests for `AddTaskUseCase` (valid title creates pending task with trimmed text, empty/whitespace title throws validation error) in `tests/unit/features/add-task.test.ts`
+- [x] T011 [US1] Write failing unit tests for `AddTaskUseCase` (valid title creates pending task with trimmed text, empty/whitespace title throws validation error) in `tests/unit/features/add-task.test.ts`
 
 ### Implementation
 
-- [ ] T012 [US1] Implement `AddTaskUseCase.execute(title: string): Task` — trim title, validate non-empty, delegate to `TaskStore.addTask`; export from `src/features/add-task/index.ts`; run T011 until green in `src/features/add-task/use-case.ts`
-- [ ] T013 [US1] Create `src/index.ts` — parse `process.argv` for `add <title>` command; load tasks via `readTasks`, build `TaskStore`, call `AddTaskUseCase`, save via `writeTasks`; on success print `✓ Task added: {id}\nTitle: {title}\nStatus: pending` to stdout, exit 0; on validation error print to stderr, exit 1; on fs error print to stderr, exit 2
+- [x] T012 [US1] Implement `AddTaskUseCase.execute(title: string): Task` — trim title, validate non-empty, delegate to `TaskStore.addTask`; export from `src/features/add-task/index.ts`; run T011 until green in `src/features/add-task/use-case.ts`
+- [x] T013 [US1] Create `src/index.ts` — parse `process.argv` for `add <title>` command; load tasks via `readTasks`, build `TaskStore`, call `AddTaskUseCase`, save via `writeTasks`; on success print `✓ Task added: {id}\nTitle: {title}\nStatus: pending` to stdout, exit 0; on validation error print to stderr, exit 1; on fs error print to stderr, exit 2
 
 **Checkpoint**: `npm run build && node dist/index.js add "Buy groceries"` works end-to-end
 
@@ -73,12 +73,12 @@ Single project layout per plan.md: `src/` and `tests/` at repository root.
 
 ### Tests
 
-- [ ] T014 [US2] Write failing unit tests for `ListTasksUseCase` (returns empty array when no tasks, returns all tasks in id-ascending order) in `tests/unit/features/list-tasks.test.ts`
+- [x] T014 [US2] Write failing unit tests for `ListTasksUseCase` (returns empty array when no tasks, returns all tasks in id-ascending order) in `tests/unit/features/list-tasks.test.ts`
 
 ### Implementation
 
-- [ ] T015 [US2] Implement `ListTasksUseCase.execute(): Task[]` — delegate to `TaskStore.getTasks()`; export from `src/features/list-tasks/index.ts`; run T014 until green in `src/features/list-tasks/use-case.ts`
-- [ ] T016 [US2] Add `list` command handler to `src/index.ts` — load tasks, call `ListTasksUseCase`; if empty print `No tasks found.`; otherwise print table with header `ID  Status      Title` and one row per task (ID right-padded 4, Status left-padded 10, Title full); exit 0
+- [x] T015 [US2] Implement `ListTasksUseCase.execute(): Task[]` — delegate to `TaskStore.getTasks()`; export from `src/features/list-tasks/index.ts`; run T014 until green in `src/features/list-tasks/use-case.ts`
+- [x] T016 [US2] Add `list` command handler to `src/index.ts` — load tasks, call `ListTasksUseCase`; if empty print `No tasks found.`; otherwise print table with header `ID  Status      Title` and one row per task (ID right-padded 4, Status left-padded 10, Title full); exit 0
 
 **Checkpoint**: `node dist/index.js list` shows correct table or empty message
 
@@ -92,12 +92,12 @@ Single project layout per plan.md: `src/` and `tests/` at repository root.
 
 ### Tests
 
-- [ ] T017 [US3] Write failing unit tests for `CompleteTaskUseCase` (marks pending task as done, throws on non-existent id) in `tests/unit/features/complete-task.test.ts`
+- [x] T017 [US3] Write failing unit tests for `CompleteTaskUseCase` (marks pending task as done, throws on non-existent id) in `tests/unit/features/complete-task.test.ts`
 
 ### Implementation
 
-- [ ] T018 [US3] Implement `CompleteTaskUseCase.execute(id: number): Task` — call `TaskStore.completeTask(id)`, save updated store; export from `src/features/complete-task/index.ts`; run T017 until green in `src/features/complete-task/use-case.ts`
-- [ ] T019 [US3] Add `complete <id>` command handler to `src/index.ts` — parse id as integer (reject non-integer: stderr + exit 1), load tasks, call `CompleteTaskUseCase`, save via `writeTasks`; on success print `✓ Task completed: {id}\nTitle: {title}` to stdout, exit 0; on not-found print `Error: Task not found with ID: {id}` to stderr, exit 1
+- [x] T018 [US3] Implement `CompleteTaskUseCase.execute(id: number): Task` — call `TaskStore.completeTask(id)`, save updated store; export from `src/features/complete-task/index.ts`; run T017 until green in `src/features/complete-task/use-case.ts`
+- [x] T019 [US3] Add `complete <id>` command handler to `src/index.ts` — parse id as integer (reject non-integer: stderr + exit 1), load tasks, call `CompleteTaskUseCase`, save via `writeTasks`; on success print `✓ Task completed: {id}\nTitle: {title}` to stdout, exit 0; on not-found print `Error: Task not found with ID: {id}` to stderr, exit 1
 
 **Checkpoint**: All three commands (add, list, complete) work independently and together
 
@@ -107,10 +107,10 @@ Single project layout per plan.md: `src/` and `tests/` at repository root.
 
 **Purpose**: Integration testing, coverage gate, type check, and end-to-end contract validation
 
-- [ ] T020 Write integration test covering the full add → list → complete flow using a temp `tasks.json` file (create in `beforeEach`, delete in `afterEach`) in `tests/integration/cli-flow.test.ts`
-- [ ] T021 [P] Run `npm run test:coverage`; confirm ≥ 70% branches, functions, lines, and statements across all source files; fix gaps if below threshold
-- [ ] T022 [P] Run `npx tsc --noEmit`; resolve any TypeScript strict mode errors in `src/`
-- [ ] T023 Run `npm run build`; manually validate all example interactions from `specs/001-task-manager/contracts/cli-commands.md` produce the documented output and exit codes
+- [x] T020 Write integration test covering the full add → list → complete flow using a temp `tasks.json` file (create in `beforeEach`, delete in `afterEach`) in `tests/integration/cli-flow.test.ts`
+- [x] T021 [P] Run `npm run test:coverage`; confirm ≥ 70% branches, functions, lines, and statements across all source files; fix gaps if below threshold
+- [x] T022 [P] Run `npx tsc --noEmit`; resolve any TypeScript strict mode errors in `src/`
+- [x] T023 Run `npm run build`; manually validate all example interactions from `specs/001-task-manager/contracts/cli-commands.md` produce the documented output and exit codes
 
 ---
 
