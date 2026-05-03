@@ -5,7 +5,7 @@
 
 ## Summary
 
-Add two new terminal task statuses (`canceled`, `failed`) that can only be set from `pending`, and apply ANSI color coding to the `list` command output (pending: plain, done: green, canceled: yellow, failed: red). Implemented via two new FSD features (`cancel-task`, `fail-task`), a new shared UI color utility, and minimal changes to the existing entity and CLI entry point. No new runtime dependencies.
+Add two new terminal task statuses (`canceled`, `failed`) reachable only from `pending`, and apply emoji-prefixed ANSI color coding to the `list` output (🔵 pending: plain, 🟢 done: green, 🟡 canceled: yellow, 🔴 failed: red). Implemented via two new FSD features (`cancel-task`, `fail-task`), a new shared UI formatting utility, and minimal changes to the existing entity and CLI entry point. No new runtime dependencies.
 
 ## Technical Context
 
@@ -13,19 +13,19 @@ Add two new terminal task statuses (`canceled`, `failed`) that can only be set f
 **Primary Dependencies**: Node.js 18+ built-ins only (no new runtime deps)  
 **Storage**: Local `tasks.json` (no format change required)  
 **Testing**: Jest 30 + ts-jest (TDD approach)  
-**Target Platform**: macOS/Linux terminal (ANSI escape codes; graceful fallback for non-TTY)  
+**Target Platform**: macOS/Linux terminal (ANSI escape codes + Unicode emoji; graceful fallback for non-TTY)  
 **Project Type**: Console CLI application  
 **Performance Goals**: Single-shot CLI invocation; I/O performance unchanged  
 **Constraints**: No new runtime dependencies; backwards-compatible with existing `tasks.json`  
-**Scale/Scope**: Extends existing 3-command CLI with 2 new commands and color output
+**Scale/Scope**: Extends existing 3-command CLI with 2 new commands and emoji+color output
 
 ## Constitution Check
 
 - **TypeScript Mandatory**: ✅ All new and modified files are `.ts`; strict mode enforced
 - **Unit Testing First**: ✅ TDD — tests written before each implementation step
-- **Feature-Sliced Design**: ✅ New features in `src/features/cancel-task/` and `src/features/fail-task/`; color utility in `src/shared/ui/`
+- **Feature-Sliced Design**: ✅ New features in `src/features/cancel-task/` and `src/features/fail-task/`; formatting utility in `src/shared/ui/`
 - **Console Interface**: ✅ Two new CLI commands added; no GUI or web interface
-- **Simplicity**: ✅ No new dependencies; ~80 lines of new source code; YAGNI — no generic state machine
+- **Simplicity**: ✅ No new dependencies; ~100 lines of new source code; YAGNI — no generic state machine
 
 *All constitution gates pass. No violations to justify.*
 
@@ -69,29 +69,25 @@ src/
 │   ├── types/
 │   │   └── task.ts       ← MODIFY: extend TaskStatus union
 │   └── ui/               ← NEW
-│       ├── colors.ts
+│       ├── status-format.ts
 │       └── index.ts
-└── index.ts              ← MODIFY: add cancel/fail handlers; colorize list output
+└── index.ts              ← MODIFY: add cancel/fail handlers; apply formatStatus() to list output
 
 tests/
 ├── unit/
 │   ├── entities/
-│   │   └── task.test.ts           ← MODIFY: add cancelTask/failTask/guard tests
+│   │   └── task.test.ts              ← MODIFY: add cancelTask/failTask/guard tests
 │   ├── features/
-│   │   ├── add-task.test.ts       (unchanged)
-│   │   ├── complete-task.test.ts  (unchanged)
-│   │   ├── list-tasks.test.ts     (unchanged)
-│   │   ├── cancel-task.test.ts    ← NEW
-│   │   └── fail-task.test.ts      ← NEW
+│   │   ├── cancel-task.test.ts       ← NEW
+│   │   └── fail-task.test.ts         ← NEW
 │   └── shared/
-│       ├── storage.test.ts        (unchanged)
-│       └── colors.test.ts         ← NEW
+│       └── status-format.test.ts     ← NEW
 └── integration/
-    └── cli-flow.test.ts           ← MODIFY: add cancel/fail command scenarios
+    └── cli-flow.test.ts              ← MODIFY: add cancel/fail command scenarios
 ```
 
-**Structure Decision**: Single-project layout (Option 1) — existing structure extended. No new top-level directories needed beyond `src/shared/ui/`.
+**Structure Decision**: Single-project layout — existing structure extended. `src/shared/ui/` is the only new directory.
 
 ## Complexity Tracking
 
-*No constitution violations — this section is left empty per instructions.*
+*No constitution violations — this section is intentionally empty.*

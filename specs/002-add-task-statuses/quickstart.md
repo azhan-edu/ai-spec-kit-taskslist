@@ -9,7 +9,7 @@
 
 ## Overview
 
-This guide covers implementing the two new task statuses (`canceled`, `failed`), status color coding in the `list` output, and the `cancel`/`fail` CLI commands. No new dependencies are required.
+This guide covers implementing the two new task statuses (`canceled`, `failed`), emoji-prefixed color coding in the `list` output, and the `cancel`/`fail` CLI commands. No new dependencies are required.
 
 ---
 
@@ -18,21 +18,19 @@ This guide covers implementing the two new task statuses (`canceled`, `failed`),
 | Area | Change |
 |------|--------|
 | `src/shared/types/task.ts` | Extend `TaskStatus` union |
-| `src/shared/ui/` | **New**: ANSI color utility |
+| `src/shared/ui/` | **New**: emoji + ANSI status formatting utility |
 | `src/entities/task/model.ts` | Add `cancelTask()`, `failTask()`, transition guard |
 | `src/features/cancel-task/` | **New**: cancel use case |
 | `src/features/fail-task/` | **New**: fail use case |
-| `src/index.ts` | Add `cancel`/`fail` handlers; colorize `list` status column |
+| `src/index.ts` | Add `cancel`/`fail` handlers; apply `formatStatus()` to `list` output |
 | `tests/unit/entities/task.test.ts` | Add transition guard tests |
 | `tests/unit/features/cancel-task.test.ts` | **New** |
 | `tests/unit/features/fail-task.test.ts` | **New** |
-| `tests/unit/shared/colors.test.ts` | **New** |
+| `tests/unit/shared/status-format.test.ts` | **New** |
 
 ---
 
 ## TDD Workflow
-
-Follow TDD order: write a failing test → implement → pass.
 
 ### Step 1: Extend TaskStatus Type
 
@@ -42,18 +40,18 @@ Follow TDD order: write a failing test → implement → pass.
 export type TaskStatus = 'pending' | 'done' | 'canceled' | 'failed';
 ```
 
-No test needed — this is a type-only change. Run `npx tsc --noEmit` to verify.
+No test needed — type-only change. Verify with `npx tsc --noEmit`.
 
 ---
 
-### Step 2: Color Utility (TDD)
+### Step 2: Status Formatting Utility (TDD)
 
-**Test first**: `tests/unit/shared/colors.test.ts`
+**Test first**: `tests/unit/shared/status-format.test.ts`
 
 ```typescript
-import { colorStatus } from '../../../src/shared/ui/colors';
+import { formatStatus } from '../../../src/shared/ui/status-format';
 
-describe('colorStatus', () => {
+describe('formatStatus', () => {
   const originalIsTTY = process.stdout.isTTY;
 
   afterEach(() => {
@@ -61,8 +59,10 @@ describe('colorStatus', () => {
     delete process.env.NO_COLOR;
   });
 
-  it('returns plain text for pending in any context', () => {
-    expect(colorStatus('pending')).toBe('pending');
+  it('prefixes pending with 🔵 and returns plain text', () => {
+    const result = formatStatus('pending', 'pending   ');
+    expect(result).toContain('🔵');
+    expect(result).toContain('pending');
   });
 
   describe('in TTY context', () => {
@@ -70,17 +70,23 @@ describe('colorStatus', () => {
       Object.defineProperty(process.stdout, 'isTTY', { value: true, configurable: true });
     });
 
-    it('wraps done in green', () => {
-      expect(colorStatus('done')).toContain('[32m');
-      expect(colorStatus('done')).toContain('[0m');
+    it('prefixes done with 🟢 and wraps in green', () => {
+      const result = formatStatus('done', 'done      ');
+      expect(result).toContain('🟢');
+      expect(result).toContain('[32m');
+      expect(result).toContain('[0m');
     });
 
-    it('wraps canceled in yellow', () => {
-      expect(colorStatus('canceled')).toContain('[33m');
+    it('prefixes canceled with 🟡 and wraps in yellow', () => {
+      const result = formatStatus('canceled', 'canceled  ');
+      expect(result).toContain('🟡');
+      expect(result).toContain('[33m');
     });
 
-    it('wraps failed in red', () => {
-      expect(colorStatus('failed')).toContain('[31m');
+    it('prefixes failed with 🔴 and wraps in red', () => {
+      const result = formatStatus('failed', 'failed    ');
+      expect(result).toContain('🔴');
+      expect(result).toContain('[31m');
     });
   });
 
@@ -89,8 +95,10 @@ describe('colorStatus', () => {
       Object.defineProperty(process.stdout, 'isTTY', { value: false, configurable: true });
     });
 
-    it('returns plain text for done', () => {
-      expect(colorStatus('done')).toBe('done');
+    it('shows emoji but no ANSI codes for done', () => {
+      const result = formatStatus('done', 'done      ');
+      expect(result).toContain('🟢');
+      expect(result).not.toContain('[32m');
     });
   });
 
@@ -100,14 +108,16 @@ describe('colorStatus', () => {
       process.env.NO_COLOR = '1';
     });
 
-    it('returns plain text for done', () => {
-      expect(colorStatus('done')).toBe('done');
+    it('shows emoji but no ANSI codes', () => {
+      const result = formatStatus('done', 'done      ');
+      expect(result).toContain('🟢');
+      expect(result).not.toContain('[32m');
     });
   });
 });
 ```
 
-**Implement**: `src/shared/ui/colors.ts`
+**Implement**: `src/shared/ui/status-format.ts`
 
 ```typescript
 import { TaskStatus } from '../types/task';
@@ -115,25 +125,41 @@ import { TaskStatus } from '../types/task';
 const ESC = '';
 const RESET = `${ESC}[0m`;
 
+const EMOJI: Record<TaskStatus, string> = {
+  pending:  '🔵',
+  done:     '🟢',
+  canceled: '🟡',
+  failed:   '🔴',
+};
+
+const COLOR: Partial<Record<TaskStatus, string>> = {
+  done:     '32',
+  canceled: '33',
+  failed:   '31',
+};
+
 function colorize(text: string, code: string): string {
   if (!process.stdout.isTTY || process.env.NO_COLOR) return text;
   return `${ESC}[${code}m${text}${RESET}`;
 }
 
-export function colorStatus(status: TaskStatus | string): string {
-  switch (status) {
-    case 'done':     return colorize(status as string, '32');
-    case 'canceled': return colorize(status as string, '33');
-    case 'failed':   return colorize(status as string, '31');
-    default:         return status as string;
-  }
+/**
+ * Returns a display string for the status column.
+ * paddedLabel should be the raw status string already padded to column width
+ * (e.g. status.padEnd(10)) — padding before emoji preserves alignment.
+ */
+export function formatStatus(status: TaskStatus, paddedLabel: string): string {
+  const emoji = EMOJI[status] ?? '';
+  const label = `${emoji} ${paddedLabel}`;
+  const code = COLOR[status];
+  return code ? colorize(label, code) : label;
 }
 ```
 
 **Export**: `src/shared/ui/index.ts`
 
 ```typescript
-export { colorStatus } from './colors';
+export { formatStatus } from './status-format';
 ```
 
 ---
@@ -157,19 +183,22 @@ describe('cancelTask', () => {
   it('throws when task is already done', () => {
     const task = store.addTask('Done task');
     store.completeTask(task.id);
-    expect(() => store.cancelTask(task.id)).toThrow(`Cannot cancel task ${task.id}: task is already done`);
+    expect(() => store.cancelTask(task.id))
+      .toThrow(`Cannot cancel task ${task.id}: task is already done`);
   });
 
   it('throws when task is already canceled', () => {
     const task = store.addTask('Canceled task');
     store.cancelTask(task.id);
-    expect(() => store.cancelTask(task.id)).toThrow(`Cannot cancel task ${task.id}: task is already canceled`);
+    expect(() => store.cancelTask(task.id))
+      .toThrow(`Cannot cancel task ${task.id}: task is already canceled`);
   });
 
   it('throws when task is already failed', () => {
     const task = store.addTask('Failed task');
     store.failTask(task.id);
-    expect(() => store.cancelTask(task.id)).toThrow(`Cannot cancel task ${task.id}: task is already failed`);
+    expect(() => store.cancelTask(task.id))
+      .toThrow(`Cannot cancel task ${task.id}: task is already failed`);
   });
 });
 
@@ -187,30 +216,34 @@ describe('failTask', () => {
   it('throws when task is already done', () => {
     const task = store.addTask('Done task');
     store.completeTask(task.id);
-    expect(() => store.failTask(task.id)).toThrow(`Cannot fail task ${task.id}: task is already done`);
+    expect(() => store.failTask(task.id))
+      .toThrow(`Cannot fail task ${task.id}: task is already done`);
   });
 
   it('throws when task is already canceled', () => {
     const task = store.addTask('Canceled task');
     store.cancelTask(task.id);
-    expect(() => store.failTask(task.id)).toThrow(`Cannot fail task ${task.id}: task is already canceled`);
+    expect(() => store.failTask(task.id))
+      .toThrow(`Cannot fail task ${task.id}: task is already canceled`);
   });
 
   it('throws when task is already failed', () => {
     const task = store.addTask('Failed task');
     store.failTask(task.id);
-    expect(() => store.failTask(task.id)).toThrow(`Cannot fail task ${task.id}: task is already failed`);
+    expect(() => store.failTask(task.id))
+      .toThrow(`Cannot fail task ${task.id}: task is already failed`);
   });
 });
 ```
 
-**Implement** in `src/entities/task/model.ts` — add two methods:
+**Implement** in `src/entities/task/model.ts`:
 
 ```typescript
 cancelTask(id: number): Task {
   const task = this.tasks.find((t) => t.id === id);
   if (!task) throw new Error(`Task not found with ID: ${id}`);
-  if (task.status !== 'pending') throw new Error(`Cannot cancel task ${id}: task is already ${task.status}`);
+  if (task.status !== 'pending')
+    throw new Error(`Cannot cancel task ${id}: task is already ${task.status}`);
   task.status = 'canceled';
   return task;
 }
@@ -218,7 +251,8 @@ cancelTask(id: number): Task {
 failTask(id: number): Task {
   const task = this.tasks.find((t) => t.id === id);
   if (!task) throw new Error(`Task not found with ID: ${id}`);
-  if (task.status !== 'pending') throw new Error(`Cannot fail task ${id}: task is already ${task.status}`);
+  if (task.status !== 'pending')
+    throw new Error(`Cannot fail task ${id}: task is already ${task.status}`);
   task.status = 'failed';
   return task;
 }
@@ -228,7 +262,7 @@ failTask(id: number): Task {
 
 ### Step 4: New Use Cases (TDD)
 
-**CancelTaskUseCase** — `tests/unit/features/cancel-task.test.ts`:
+**`tests/unit/features/cancel-task.test.ts`**:
 
 ```typescript
 import { CancelTaskUseCase } from '../../../src/features/cancel-task';
@@ -248,12 +282,13 @@ describe('CancelTaskUseCase', () => {
 
   it('throws when task id does not exist', () => {
     const store = new TaskStore([]);
-    expect(() => new CancelTaskUseCase(store).execute(999)).toThrow('Task not found with ID: 999');
+    expect(() => new CancelTaskUseCase(store).execute(999))
+      .toThrow('Task not found with ID: 999');
   });
 });
 ```
 
-**Implement**: `src/features/cancel-task/use-case.ts`
+**`src/features/cancel-task/use-case.ts`**:
 
 ```typescript
 import { Task } from '../../shared/types/task';
@@ -261,93 +296,102 @@ import { TaskStore } from '../../entities/task';
 
 export class CancelTaskUseCase {
   constructor(private store: TaskStore) {}
-
-  execute(id: number): Task {
-    return this.store.cancelTask(id);
-  }
+  execute(id: number): Task { return this.store.cancelTask(id); }
 }
 ```
 
-`src/features/cancel-task/index.ts`:
+**`src/features/cancel-task/index.ts`**:
 
 ```typescript
 export { CancelTaskUseCase } from './use-case';
 ```
 
-Repeat the same pattern for **FailTaskUseCase** (`src/features/fail-task/`).
+Repeat the same pattern for **FailTaskUseCase** in `src/features/fail-task/`.
 
 ---
 
 ### Step 5: Update CLI Entry Point
 
-In `src/index.ts`:
+**`src/index.ts`** changes:
 
-1. Import new use cases and color utility:
+1. Import new use cases and formatter:
 ```typescript
 import { CancelTaskUseCase } from './features/cancel-task';
 import { FailTaskUseCase } from './features/fail-task';
-import { colorStatus } from './shared/ui';
+import { formatStatus } from './shared/ui';
 ```
 
-2. Update `USAGE` constant to include `cancel` and `fail`.
+2. Update `USAGE` to include `cancel` and `fail`.
 
-3. Add `handleCancel()` and `handleFail()` functions (parallel to `handleComplete()`).
-
-4. Update `handleList()` to colorize the status column:
+3. Update `handleList()` — apply `formatStatus` with pre-padded label:
 ```typescript
 const rows = tasks.map((t) =>
-  `${String(t.id).padEnd(4)}${colorStatus(t.status.padEnd(12))}${t.title}`
+  `${String(t.id).padEnd(4)}${formatStatus(t.status, t.status.padEnd(10))}${t.title}`
 );
 ```
 
-5. Add cases to the switch statement:
+4. Add `handleCancel()` (mirrors `handleComplete()`, uses `CancelTaskUseCase`):
 ```typescript
-case 'cancel':
-  handleCancel();
-  break;
-case 'fail':
-  handleFail();
-  break;
+function handleCancel(): void {
+  const raw = args[0];
+  const id = Number(raw);
+  if (!raw || !Number.isInteger(id) || id <= 0) {
+    process.stderr.write(`Error: Invalid ID: '${raw}' is not a number\nUsage: cancel <id>\n`);
+    process.exit(1);
+  }
+  const store = loadStore();
+  const existing = store.getTaskById(id);
+  if (existing?.status === 'canceled') {
+    process.stdout.write(`ℹ Task ${id} is already canceled.\n`);
+    process.exit(0);
+  }
+  try {
+    const task = new CancelTaskUseCase(store).execute(id);
+    saveStore(store);
+    process.stdout.write(`✓ Task canceled: ${task.id}\nTitle: ${task.title}\n`);
+    process.exit(0);
+  } catch (err) {
+    process.stderr.write(`Error: ${(err as Error).message}\nHint: Run \`list\` to see valid task IDs\n`);
+    process.exit(1);
+  }
+}
+```
+
+5. Add `handleFail()` following the same pattern with `FailTaskUseCase`.
+
+6. Add switch cases:
+```typescript
+case 'cancel': handleCancel(); break;
+case 'fail':   handleFail();   break;
 ```
 
 ---
 
-## Running Tests
+## Verification
 
 ```bash
-# Run all tests
-npm test
-
-# Run only new tests
-npm test -- tests/unit/shared/colors.test.ts
-npm test -- tests/unit/features/cancel-task.test.ts
-npm test -- tests/unit/features/fail-task.test.ts
-
-# Run with coverage
-npm run test:coverage
-```
-
----
-
-## Verifying the CLI
-
-```bash
+# Build and smoke-test
 npx tsc && \
   node dist/index.js add "Buy groceries" && \
+  node dist/index.js add "Call dentist" && \
+  node dist/index.js complete 2 && \
   node dist/index.js cancel 1 && \
   node dist/index.js list
+# Expected: 🔴/🟡/🟢/🔵 prefixed status column with ANSI colors
 
-# Expected: task 1 shows as "canceled" in yellow
+# Piped output (no ANSI, emoji visible)
+node dist/index.js list | cat
 ```
 
 ---
 
 ## Checklist Before Marking Done
 
-- [ ] `npx tsc --noEmit` passes with no errors
-- [ ] `npm test` passes with no failures
+- [ ] `npx tsc --noEmit` passes
+- [ ] `npm test` passes
 - [ ] `npm run test:coverage` meets ≥ 70% threshold
-- [ ] `list` shows colored status labels in a TTY
-- [ ] `list` shows plain text when output is piped
-- [ ] `cancel` and `fail` reject non-pending tasks with correct error messages
-- [ ] `tasks.json` persists `canceled` and `failed` statuses correctly
+- [ ] `list` shows `🔵🟢🟡🔴` emoji prefixes in correct order
+- [ ] `list` applies green/yellow/red ANSI colors in a TTY
+- [ ] `list` shows plain emoji text (no ANSI codes) when piped
+- [ ] `cancel`/`fail` reject non-pending tasks with correct error messages
+- [ ] `tasks.json` persists `canceled` and `failed` correctly

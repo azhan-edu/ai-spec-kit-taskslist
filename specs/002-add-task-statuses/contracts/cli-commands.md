@@ -16,7 +16,7 @@ This contract extends the existing Task Manager CLI with two new commands and up
 - `fail <id>` — Mark a pending task as failed
 
 **Updated commands**:
-- `list` — Now outputs status labels with ANSI color coding
+- `list` — Now outputs status labels with emoji prefix and ANSI color coding
 
 ---
 
@@ -39,33 +39,34 @@ Commands:
 
 ## Updated Command: list
 
-**Change**: The `Status` column now applies ANSI color codes to each status value when stdout is a TTY. In non-TTY contexts (piped output), plain text is used.
+**Change**: The `Status` column now shows `{emoji} {status}` with ANSI color applied to the full string when stdout is a TTY. In non-TTY contexts (piped output), emoji circles remain visible but ANSI codes are omitted.
 
-**Color mapping**:
+**Status display format**:
 
-| Status   | Color  |
-|----------|--------|
-| pending  | (none) |
-| done     | green  |
-| canceled | yellow |
-| failed   | red    |
+| Status   | TTY output (colored)        | Non-TTY output  |
+|----------|-----------------------------|-----------------|
+| pending  | `🔵 pending` (plain)        | `🔵 pending`    |
+| done     | `🟢 done` (green)           | `🟢 done`       |
+| canceled | `🟡 canceled` (yellow)      | `🟡 canceled`   |
+| failed   | `🔴 failed` (red)           | `🔴 failed`     |
 
-**Output format** (unchanged except for color):
+**Column alignment**: Padding is calculated from the raw status string length before the emoji is prepended. The emoji (2 display columns) + space prefix causes the status column to appear slightly wider visually, but text column alignment is preserved.
+
+**Output format**:
 
 - **No tasks**:
   ```
   No tasks found.
   ```
 
-- **With tasks** (colors applied to status text when TTY):
+- **With tasks** (TTY — colors applied, shown here as plain text):
   ```
-  ID  Status      Title
-  1   pending     Buy groceries
-  2   done        Call dentist
-  3   canceled    Fix bug #42
-  4   failed      Deploy to prod
+  ID  Status          Title
+  1   🔵 pending      Buy groceries
+  2   🟢 done         Call dentist
+  3   🟡 canceled     Fix bug #42
+  4   🔴 failed       Deploy to prod
   ```
-  Where `done` appears green, `canceled` yellow, `failed` red in a color terminal.
 
 **Exit codes**: unchanged (0 = success, 2 = file system error)
 
@@ -165,7 +166,7 @@ fail <id>
   ℹ Task [id] is already failed.
   ```
   → stdout, exit 0
-- **Error (task in non-failabe state)**:
+- **Error (task in non-failable state)**:
   ```
   Error: Cannot fail task [id]: task is already [status]
   Hint: Run `list` to see valid task IDs
@@ -235,4 +236,4 @@ Hint: Run `list` to see valid task IDs
 | Cancel/fail a done task | Error: invalid transition; stderr; exit 1 |
 | Cancel a failed task | Error: invalid transition; stderr; exit 1 |
 | Fail a canceled task | Error: invalid transition; stderr; exit 1 |
-| `list` in non-TTY context (piped) | Plain text output; no ANSI codes |
+| `list` in non-TTY context (piped) | Emoji circles shown; ANSI codes omitted |

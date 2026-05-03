@@ -39,9 +39,9 @@ As a user, I want to mark a pending task as failed so that I can record that I a
 
 ---
 
-### User Story 3 - View Colorized Task List (Priority: P3)
+### User Story 3 - View Colorized and Emoji-Prefixed Task List (Priority: P3)
 
-As a user, I want each task status to be visually color-coded in the list so that I can quickly identify task states at a glance.
+As a user, I want each task status to display a colored emoji circle alongside its color-coded label in the list so that I can instantly identify task states at a glance.
 
 **Why this priority**: Enhances usability of the list view without adding new functionality.
 
@@ -49,8 +49,8 @@ As a user, I want each task status to be visually color-coded in the list so tha
 
 **Acceptance Scenarios**:
 
-1. **Given** tasks with statuses pending, done, canceled, and failed, **When** I list all tasks, **Then** each status is displayed in its designated color
-2. **Given** a terminal that does not support colors, **When** I list tasks, **Then** status labels are still readable in plain text without visual corruption
+1. **Given** tasks with statuses pending, done, canceled, and failed, **When** I list all tasks, **Then** each status displays its emoji circle prefix alongside its ANSI color
+2. **Given** a terminal that does not support colors, **When** I list tasks, **Then** status labels are still readable in plain text without visual corruption (emoji circles remain visible as Unicode)
 
 ---
 
@@ -60,6 +60,14 @@ As a user, I want each task status to be visually color-coded in the list so tha
 - What happens when trying to cancel or fail a task that is already done?
 - What happens when trying to cancel or fail a task that is already in a terminal status (canceled or failed)?
 - How does the task list render in terminals without ANSI color support?
+
+## Clarifications
+
+### Session 2026-05-03
+
+- Q: Should status emojis appear alongside existing ANSI color coding or replace it? → A: Alongside — emoji prefix + ANSI color on status text
+- Q: Which emoji represents each status? → A: 🔵 pending, 🟢 done, 🟡 canceled, 🔴 failed
+- Q: Where should the emoji appear relative to the status text? → A: Before the status label (prefix), e.g. `🟢 done`
 
 ## Requirements *(mandatory)*
 
@@ -71,10 +79,10 @@ As a user, I want each task status to be visually color-coded in the list so tha
 - **FR-004**: System MUST prevent transitioning a task from failed status to any other status
 - **FR-005**: System MUST prevent transitioning a task from done status to canceled or failed
 - **FR-006**: System MUST display a clear error message when an invalid status transition is attempted
-- **FR-007**: System MUST display done tasks in green color when listing
-- **FR-008**: System MUST display canceled tasks in yellow color when listing
-- **FR-009**: System MUST display failed tasks in red color when listing
-- **FR-010**: System MUST display pending tasks with the existing (unchanged) color style when listing
+- **FR-007**: System MUST display done tasks as `🟢 done` (emoji prefix + green color) when listing
+- **FR-008**: System MUST display canceled tasks as `🟡 canceled` (emoji prefix + yellow color) when listing
+- **FR-009**: System MUST display failed tasks as `🔴 failed` (emoji prefix + red color) when listing
+- **FR-010**: System MUST display pending tasks as `🔵 pending` (emoji prefix + existing color style) when listing
 - **FR-011**: System MUST persist canceled and failed statuses to storage so they survive application restarts
 
 ### Key Entities
@@ -87,7 +95,7 @@ As a user, I want each task status to be visually color-coded in the list so tha
 ### Measurable Outcomes
 
 - **SC-001**: Users can mark a pending task as canceled or failed in a single action
-- **SC-002**: All four task statuses are visually distinguishable through color coding in the task list
+- **SC-002**: All four task statuses are visually distinguishable through both emoji circle prefix and color coding in the task list
 - **SC-003**: Invalid status transition attempts are rejected with a clear, human-readable error message 100% of the time
 - **SC-004**: Canceled and failed status changes persist and are correctly restored across application restarts
 - **SC-005**: Existing task workflows (add, list, complete) are unaffected by this change
