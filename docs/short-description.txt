@@ -1,0 +1,4 @@
+Add Task: Ability to add a new task with a title. 
+List Tasks: Display all current tasks with their status (pending/done). 
+Complete Task: Mark a specific task as done by ID. 
+Persistence: Tasks must be saved to a local tasks.json file. 

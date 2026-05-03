@@ -31,7 +31,11 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- **TypeScript Mandatory**: Language must be TypeScript, no JavaScript allowed
+- **Unit Testing First**: Testing framework must be Jest, TDD approach required
+- **Feature-Sliced Design**: Architecture must follow FSD principles
+- **Console Interface**: Project type must be console application
+- **Simplicity**: Design must avoid over-engineering, follow YAGNI
 
 ## Project Structure
 
