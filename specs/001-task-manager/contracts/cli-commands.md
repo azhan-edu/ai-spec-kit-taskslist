@@ -49,7 +49,7 @@ add <title>
 **Example Interactions**:
 ```bash
 $ app add "Buy groceries"
-✓ Task added: 550e8400-e29b-41d4-a716-446655440000
+✓ Task added: 1
 Title: Buy groceries
 Status: pending
 
@@ -57,7 +57,7 @@ $ app add ""
 Error: Task title cannot be empty
 
 $ app add "Complete project proposal"
-✓ Task added: 6ba7b810-9dad-11d1-80b4-00c04fd430c8
+✓ Task added: 2
 Title: Complete project proposal
 Status: pending
 ```
@@ -76,16 +76,25 @@ list
 **Arguments**: None
 
 **Output Format**:
+
+Table format with three columns: ID, Status, Title.
+- Column widths: ID (4 chars, right-aligned), Status (10 chars, left-aligned), Title (remaining, left-aligned)
+- Column separator: Two spaces ("  ")
+- Header row: "ID  Status      Title" (followed by newline)
+- Data rows: One task per line, values right/left-aligned as specified
+- Sorting: By task ID ascending (creation order)
+- Title truncation: None in v1 (full title displayed, may wrap)
+
 - **No tasks**:
   ```
   No tasks found.
   ```
 - **With tasks**:
   ```
-  Tasks:
-  [ID]    [Status]    [Title]
-  550e8400-e29b-41d4-a716-446655440000    pending    Buy groceries
-  6ba7b810-9dad-11d1-80b4-00c04fd430c8    done       Complete project proposal
+  ID  Status      Title
+  1   pending     Buy groceries
+  2   done        Complete project proposal
+  3   pending     Learn TypeScript
   ```
 
 **Exit Codes**:
@@ -95,9 +104,9 @@ list
 **Example Interactions**:
 ```bash
 $ app list
-Tasks:
-550e8400-e29b-41d4-a716-446655440000    pending    Buy groceries
-6ba7b810-9dad-11d1-80b4-00c04fd430c8    done       Complete project proposal
+ID  Status      Title
+1   pending     Buy groceries
+2   done        Complete project proposal
 
 $ app list
 No tasks found.
@@ -115,7 +124,7 @@ complete <id>
 ```
 
 **Arguments**:
-- `id` (string, required): Task UUID to mark as complete
+- `id` (integer, required): Task ID (sequential integer) to mark as complete
 
 **Output**:
 - **Success**:
@@ -135,12 +144,12 @@ complete <id>
 
 **Example Interactions**:
 ```bash
-$ app complete 550e8400-e29b-41d4-a716-446655440000
-✓ Task completed: 550e8400-e29b-41d4-a716-446655440000
+$ app complete 1
+✓ Task completed: 1
 Title: Buy groceries
 
-$ app complete invalid-id-format
-Error: Task not found with ID: invalid-id-format
+$ app complete 999
+Error: Task not found with ID: 999
 ```
 
 ---
@@ -169,8 +178,8 @@ Error: Task not found with ID: invalid-id-format
 | Error | Condition | Recovery |
 |-------|-----------|----------|
 | Empty title | `add` with empty string | Show usage, exit 1 |
-| Invalid ID | `complete` with non-UUID | Show error, exit 1 |
-| Task not found | `complete` with valid UUID that doesn't exist | Show error, exit 1 |
+| Invalid ID | `complete` with non-integer value | Show error, exit 1 |
+| Task not found | `complete` with integer ID that doesn't exist | Show error, exit 1 |
 
 ### System Errors
 

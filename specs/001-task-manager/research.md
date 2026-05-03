@@ -50,11 +50,11 @@
 
 ### 6. CLI Argument Parsing Strategy
 
-**Decision**: Simple yargs or process.argv parsing  
-**Rationale**: Minimal complexity, no external dependencies unless complexity grows. Task manager has simple commands (add, list, complete).  
+**Decision**: Direct `process.argv` parsing — no external CLI library  
+**Rationale**: Three fixed commands (add, list, complete) with trivial argument shapes. Adding commander.js or yargs for this is over-engineering and violates the Simplicity constitution principle. Switch to a library only if commands exceed 5 or flags become complex.  
 **Alternatives Considered**:  
-- Commander.js: More features than needed currently
-- Custom parsing: Reinvention if requirements grow
+- Commander.js: Adds a dependency and indirection for 3 simple subcommands
+- yargs: Heavier; optimised for apps with many flags and subcommands
 
 ### 7. Error Handling Strategy
 
