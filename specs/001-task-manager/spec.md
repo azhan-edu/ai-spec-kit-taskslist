@@ -58,6 +58,12 @@ As a user, I want to mark a task as done by its ID so that I can update my progr
 - How does system handle completing a non-existent task ID?
 - What if tasks.json file is corrupted or missing?
 
+## Clarifications
+
+### Session 2026-05-03
+
+- Q1: Task ID format (sequential integers, UUID, timestamp-based, etc.)? → A: Sequential integers (1, 2, 3...)
+
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
@@ -70,7 +76,7 @@ As a user, I want to mark a task as done by its ID so that I can update my progr
 
 ### Key Entities *(include if feature involves data)*
 
-- **Task**: Represents a task with id, title, and status (pending/done)
+- **Task**: Represents a task with id (sequential integer), title, and status (pending/done)
 
 ## Success Criteria *(mandatory)*
 
@@ -83,7 +89,7 @@ As a user, I want to mark a task as done by its ID so that I can update my progr
 
 ## Assumptions
 
-- Tasks have unique IDs (auto-generated)
+- Tasks have sequential integer IDs (1, 2, 3...), auto-assigned on creation
 - Status defaults to pending when created
 - tasks.json is in the same directory as the application
 - No concurrent access to tasks.json (single user)
